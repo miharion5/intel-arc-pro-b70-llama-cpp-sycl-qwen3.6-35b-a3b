@@ -1,11 +1,17 @@
 # llama.cpp + SYCL + Qwen3.6-35B-A3B on Intel Arc Pro B70
 
+[English](#english) | [Русский](#русский)
+
+---
+
+## English
+
 A single PowerShell script that starts [llama.cpp](https://github.com/ggml-org/llama.cpp) `llama-server`
 on the **SYCL backend** and serves **Qwen3.6-35B-A3B (UD-Q4_K_M)** entirely on the GPU of an
 **Intel Arc Pro B70**. Drop the llama.cpp SYCL build into `Llama\`, drop the model into `Model\`, run the
 script, and you get an OpenAI-compatible endpoint on `http://127.0.0.1:8010`.
 
-## Why this script exists
+### Why this script exists
 
 I wrote it to make it easy to run **llama.cpp + SYCL + Qwen3.6-35B-A3B** on an Intel Arc Pro B70.
 
@@ -20,7 +26,7 @@ than it should be on this class of hardware.
 So: take the official SYCL release build, set up the SYCL environment, and launch `llama-server` with a
 sane set of flags for this specific model and card. That is all this repository does.
 
-## Requirements
+### Requirements
 
 - Windows 11 x64
 - Intel Arc Pro B70 (32 GB) — or another Arc/Xe2 GPU with enough VRAM; ~21 GB is occupied by the model
@@ -31,9 +37,9 @@ No separate Intel oneAPI installation is required: the SYCL release archive alre
 needs (`sycl9.dll`, `ur_loader.dll`, `ur_adapter_level_zero.dll`, oneAPI MKL, TBB, OpenMP). You only need
 the GPU driver.
 
-## Setup
+### Setup
 
-### 1. llama.cpp SYCL build → `Llama\`
+#### 1. llama.cpp SYCL build → `Llama\`
 
 Download the SYCL build from the llama.cpp releases and unzip it into a folder named **`Llama`** right next
 to the script:
@@ -47,7 +53,7 @@ otherwise you will get the Vulkan or CPU build.
 
 The result must be exactly `Llama\llama-server.exe`, i.e. the contents of the archive go into `Llama\`.
 
-### 2. Model → `Model\`
+#### 2. Model → `Model\`
 
 Download the GGUF and save it as `Model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf`:
 
@@ -55,7 +61,7 @@ Download the GGUF and save it as `Model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf`:
 - direct download: <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf>
   (~21 GB)
 
-### 3. Layout
+#### 3. Layout
 
 ```
 intel-arc-pro-b70-llama-cpp-sycl-qwen3.6-35b-a3b\
@@ -71,7 +77,7 @@ intel-arc-pro-b70-llama-cpp-sycl-qwen3.6-35b-a3b\
 
 `Llama\`, `Model\` and `Cache\` are listed in `.gitignore` — nothing of that ends up in the repository.
 
-### 4. Run
+#### 4. Run
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start-qwen3.6-35b-a3b.ps1
@@ -88,7 +94,7 @@ Then:
 
 Loading the model takes roughly 25 seconds; the script's log tells you when it is up.
 
-## What the script does
+### What the script does
 
 **Environment (SYCL):**
 
@@ -119,7 +125,7 @@ Loading the model takes roughly 25 seconds; the script's log tells you when it i
 It also cleans up after itself: a stale `llama-server` still holding port 8010 (for example from a previous
 run of this script) is stopped before starting a new one. Processes serving other ports are left alone.
 
-## Why Qwen3.6-35B-A3B works so well on an Intel Arc Pro B70
+### Why Qwen3.6-35B-A3B works so well on an Intel Arc Pro B70
 
 Qwen3.6-35B-A3B delivers high performance on the Intel Arc Pro B70 thanks to the combination of a sparse
 Mixture-of-Experts (MoE) architecture and the card's well-balanced hardware. The key factor is that the model
@@ -145,7 +151,7 @@ fits this sparse workload very well:
 
 Tested on: Intel Core i5-12600KF, 64 GB RAM, Intel Arc Pro B70 32 GB (driver 32.0.101.8976), Windows 11.
 
-## Notes and troubleshooting
+### Notes and troubleshooting
 
 - **`llama-server.exe not found` / `Model not found`** — the script expects the layout from step 3. If you
   unpacked the archive one level too deep, move the contents of `Llama\llama-b11576-bin-win-sycl-x64\` up
@@ -159,9 +165,179 @@ Tested on: Intel Core i5-12600KF, 64 GB RAM, Intel Arc Pro B70 32 GB (driver 32.
 - The script is Windows/PowerShell. llama.cpp supports SYCL on Linux as well, but the paths and the launch
   wrapper here are Windows-specific.
 
-## References
+### References
 
 - llama.cpp — <https://github.com/ggml-org/llama.cpp>
 - SYCL backend performance issue on Vulkan — <https://github.com/ggml-org/llama.cpp/issues/28721>
 - llama.cpp builds — <https://github.com/ggml-org/llama.cpp/releases>
+- Qwen3.6-35B-A3B GGUF (unsloth) — <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>
+
+---
+
+## Русский
+
+Один PowerShell-скрипт, который запускает [llama.cpp](https://github.com/ggml-org/llama.cpp) `llama-server`
+на **бэкенде SYCL** и обслуживает **Qwen3.6-35B-A3B (UD-Q4_K_M)** целиком на GPU **Intel Arc Pro B70**.
+Кладёте SYCL-сборку llama.cpp в `Llama\`, модель — в `Model\`, запускаете скрипт и получаете
+OpenAI-совместимый эндпоинт на `http://127.0.0.1:8010`.
+
+### Зачем этот скрипт
+
+Я сделал этот скрипт, чтобы помочь запустить **llama.cpp + SYCL + Qwen3.6-35B-A3B** на Intel Arc Pro B70.
+
+Скрипт вообще понадобился потому, что llama.cpp «сама по себе» не умеет работать с SYCL: обычные
+Windows-сборки и путь «просто как написано в README» приводят к бэкенду **Vulkan**. А выжимает максимум из
+GPU Xe2 именно SYCL — но для него нужна отдельная сборка плюс пара переменных окружения и флагов запуска, в
+которых легко ошибиться. И даже если сознательно выбрать Vulkan, есть известная проблема —
+[ggml-org/llama.cpp#28721](https://github.com/ggml-org/llama.cpp/issues/28721) — из-за которой
+Vulkan-бэкенд теряет значительную часть производительности, и генерация токенов идёт заметно медленнее, чем
+должна на таком железе.
+
+То есть: берём официальную SYCL-сборку, настраиваем SYCL-окружение и запускаем `llama-server` с разумным
+набором флагов под конкретную модель и карту. Это всё, что делает репозиторий.
+
+### Требования
+
+- Windows 11 x64
+- Intel Arc Pro B70 (32 ГБ) — либо другая Arc/Xe2 с достаточным объёмом видеопамяти; модель занимает ~21 ГБ
+- Достаточно свежий драйвер Intel Graphics (именно он даёт runtime Level Zero, с которым работает SYCL-бэкенд)
+- PowerShell 5.1+ (встроенный в Windows подходит)
+
+Отдельная установка Intel oneAPI не нужна: в архиве SYCL-сборки уже лежит всё необходимое
+(`sycl9.dll`, `ur_loader.dll`, `ur_adapter_level_zero.dll`, oneAPI MKL, TBB, OpenMP). Нужен только драйвер GPU.
+
+### Установка
+
+#### 1. Сборка llama.cpp с SYCL → `Llama\`
+
+Скачайте SYCL-сборку из релизов llama.cpp и распакуйте её в папку **`Llama`** рядом со скриптом:
+
+- [релизы llama.cpp, b11576 (страница 9)](https://github.com/ggml-org/llama.cpp/releases?page=9#release-b11576)
+  — нужен файл `llama-b11576-bin-win-sycl-x64.zip`
+- прямая ссылка: <https://github.com/ggml-org/llama.cpp/releases/tag/b11576>
+
+Более новая сборка `llama-bXXXXX-bin-win-sycl-x64.zip` тоже подойдёт — главное, чтобы в имени файла было
+слово `sycl`, иначе это будет сборка под Vulkan или CPU.
+
+В итоге должно получиться ровно `Llama\llama-server.exe`, то есть содержимое архива кладём в `Llama\`.
+
+#### 2. Модель → `Model\`
+
+Скачайте GGUF и сохраните его как `Model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf`:
+
+- [unsloth/Qwen3.6-35B-A3B-GGUF — Qwen3.6-35B-A3B-UD-Q4_K_M.gguf](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/blob/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf)
+- прямая ссылка на скачивание: <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf>
+  (~21 ГБ)
+
+#### 3. Раскладка
+
+```
+intel-arc-pro-b70-llama-cpp-sycl-qwen3.6-35b-a3b\
+├─ start-qwen3.6-35b-a3b.ps1
+├─ Llama\                                (в .gitignore)  SYCL-сборка llama.cpp
+│  └─ llama-server.exe
+├─ Model\                                (в .gitignore)  сама модель (GGUF)
+│  └─ Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+└─ Cache\                                (в .gitignore)  создаётся скриптом
+   ├─ llama-slots\
+   └─ sycl\
+```
+
+`Llama\`, `Model\` и `Cache\` перечислены в `.gitignore` — ничего из этого в репозиторий не попадает.
+
+#### 4. Запуск
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-qwen3.6-35b-a3b.ps1
+```
+
+Дальше:
+
+| Что | Где |
+| --- | --- |
+| Веб-интерфейс | <http://127.0.0.1:8010> |
+| OpenAI-совместимый API | `http://127.0.0.1:8010/v1` (имя модели `qwen3.6-35b-a3b`) |
+| Health | <http://127.0.0.1:8010/health> |
+| Метрики Prometheus | <http://127.0.0.1:8010/metrics> |
+
+Загрузка модели занимает примерно 25 секунд; по логу скрипта видно, когда сервер поднялся.
+
+### Что делает скрипт
+
+**Окружение (SYCL):**
+
+| Переменная | Значение | Зачем |
+| --- | --- | --- |
+| `ONEAPI_DEVICE_SELECTOR` | `level_zero:gpu` | Привязывает бэкенд к драйверу Level Zero вместо OpenCL |
+| `ZES_ENABLE_SYSMAN` | `1` | Позволяет llama.cpp читать счётчики памяти/частоты GPU через Sysman |
+| `SYCL_CACHE_PERSISTENT` | `1` | Переиспользует скомпилированные SYCL-ядра между запусками |
+| `SYCL_CACHE_DIR` | `.\Cache\sycl` | Где эти ядра кэшируются (сильно ускоряет первые токены) |
+
+**Флаги запуска:**
+
+| Флаг | Значение | Зачем |
+| --- | --- | --- |
+| `-ngl` | `99` | Все слои на GPU |
+| `-c` | `131072` | Контекст 128K |
+| `-ctk` / `-ctv` | `q8_0` | Квантованный KV-кэш — позволяет уложить контекст 128K в 32 ГБ |
+| `-fa` | `on` | Flash attention, нужен для квантованного KV-кэша |
+| `-b` / `-ub` | `8192` / `4096` | Batch и micro-batch для обработки промпта |
+| `-t` | `8` | Потоки CPU (подобрано под 6 P-ядер + 4 E-ядра; подстройте под свой процессор) |
+| `--parallel` | `1` | По одному запросу за раз, весь контекст — ему |
+| `--jinja` | | Брать chat-шаблон из метаданных GGUF |
+| `--no-warmup` | | Пропустить прогревочный прогон, SYCL-кэш и так решает вопрос первого запуска |
+| `--no-reasoning-preserve` | | Не подмешивать предыдущие рассуждения обратно в промпт |
+| `--slot-save-path` | `.\Cache\llama-slots` | Сохранённые слоты (снимки промпта/KV) |
+| `--metrics` | | Отдавать `/metrics` |
+
+Скрипт ещё и убирает за собой: зависший `llama-server`, всё ещё держащий порт 8010 (например, от прошлого
+запуска этого же скрипта), останавливается перед стартом нового. Процессы, обслуживающие другие порты, не
+трогаются.
+
+### Почему Qwen3.6-35B-A3B так хорошо идёт на Intel Arc Pro B70
+
+Qwen3.6-35B-A3B показывает высокую производительность на Intel Arc Pro B70 благодаря сочетанию разреженной
+архитектуры Mixture-of-Experts (MoE) и сбалансированных аппаратных характеристик видеокарты. Ключевой фактор —
+модель активирует лишь малую часть параметров для каждого токена, что идеально ложится на возможности B70 по
+памяти и вычислениям.
+
+**Архитектура MoE: главный секрет эффективности.** Qwen3.6-35B-A3B — это модель со 35 млрд общих параметров,
+но для генерации каждого токена активируется лишь около 3 млрд. В ней используется 256 экспертов, из которых
+для каждого токена выбираются 8 маршрутизируемых и 1 общий. Это означает, что вычислительная нагрузка и
+объём данных, которые нужно прочитать из памяти во время генерации, на порядок ниже, чем у плотной модели с
+35 млрд параметров.
+
+**Идеальное совпадение с возможностями B70.** Аппаратная конфигурация Intel Arc Pro B70 хорошо подходит для
+такой разреженной нагрузки:
+
+- **Достаточный объём памяти (32 ГБ GDDR6)** — модель в популярном квантовании UD-Q4_K_M занимает около
+  20.6 ГБ, что позволяет полностью разместить её в памяти одной карты и избежать медленного обмена с
+  системной RAM. Версии в INT4 или INT8 также комфортно помещаются в 32 ГБ.
+- **Высокая пропускная способность памяти (~608 ГБ/с)** — для генерации токенов критична скорость чтения
+  весов. Хотя 608 ГБ/с — не рекордный показатель, для чтения весов всего ~3 млрд активных параметров этого
+  более чем достаточно, чтобы обеспечить высокую скорость.
+- **Тензорные ядра XMX (256 движков)** — архитектура Xe2 «Battlemage» оснащена 256 XMX-движками, которые
+  эффективно ускоряют матричные умножения, лежащие в основе работы каждого эксперта.
+
+Проверено на: Intel Core i5-12600KF, 64 ГБ RAM, Intel Arc Pro B70 32 ГБ (драйвер 32.0.101.8976), Windows 11.
+
+### Заметки и решение проблем
+
+- **`llama-server.exe not found` / `Model not found`** — скрипт ожидает раскладку из шага 3. Если архив
+  распаковался на уровень глубже, перенесите содержимое `Llama\llama-b11576-bin-win-sycl-x64\` наверх, в
+  `Llama\`.
+- **Проверить, что GPU виден для SYCL:** запустите `Llama\sycl-ls.exe`. Карта Arc должна отображаться у
+  бэкенда Level Zero.
+- **Не хватает памяти** — уменьшите `-c` (контекст) или возьмите более сильное квантование. При
+  `-c 131072` и `q8_0`-KV-кэше модель вместе с кэшем занимают почти все 32 ГБ.
+- **Скорость** — если запустить сборку под Vulkan вместо SYCL, ждите большого падения производительности
+  ([#28721](https://github.com/ggml-org/llama.cpp/issues/28721)).
+- Скрипт — под Windows/PowerShell. llama.cpp поддерживает SYCL и на Linux, но пути и обёртка запуска здесь
+  специфичны для Windows.
+
+### Ссылки
+
+- llama.cpp — <https://github.com/ggml-org/llama.cpp>
+- Проблема производительности SYCL-бэкенда на Vulkan — <https://github.com/ggml-org/llama.cpp/issues/28721>
+- Сборки llama.cpp — <https://github.com/ggml-org/llama.cpp/releases>
 - Qwen3.6-35B-A3B GGUF (unsloth) — <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>
