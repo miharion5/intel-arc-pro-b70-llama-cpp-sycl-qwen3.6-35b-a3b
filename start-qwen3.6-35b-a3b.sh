@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# llama.cpp (SYCL) + Qwen3.6-35B-A3B launcher for Intel Arc Pro B70 (Linux).
+# Everything is resolved relative to this script:
+#   ./Llama/llama-server                            - llama.cpp SYCL build (see README)
+#   ./Model/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf          - the model (see README)
+#   ./Cache/...                                     - generated at runtime (gitignored)
+set -euo pipefail
+
+# --- Paths ---
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SERVER_BIN="$SCRIPT_DIR/Llama/llama-server"
+MODEL_PATH="$SCRIPT_DIR/Model/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
+SLOTS_DIR="$SCRIPT_DIR/Cache/llama-slots"
+SYCL_CACHE="$SCRIPT_DIR/Cache/sycl"
+
+# --- Port and address ---
+HOST_ADDR="127.0.0.1"
+PORT=8010
+CONTEXT=131072
+
+# --- Checks ---
+if [[ ! -x "$SERVER_BIN" ]]; then
+    echo "error: $SERVER_BIN is missing or not executable - unpack the Linux SYCL build into ./Llama (see README.md)" >&2
+    exit 1
+fi
+if [[ ! -f "$MODEL_PATH" ]]; then
+    echo "error: model not found at $MODEL_PATH - download the GGUF into ./Model (see README.md)" >&2
+    exit 1
+fi
+
+# --- Port ---
+# A leftover process from a previous run of this script holds the port: stop it.
+# Servers listening on other ports are left alone.
+port_used() {
+    ss -ltnH 2>/dev/null | awk -v p=":${PORT}" '$4 ~ (p "$")' | grep -q .
+}
+
+listener_pids() {
+    if command -v ss >/dev/null 2>&1; then
+        ss -ltnpH 2>/dev/null | awk -v p=":${PORT}" '$4 ~ (p "$")' \
+            | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u
+    elif command -v lsof >/dev/null 2>&1; then
+        lsof -tnP -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null
+    fi
+}
+
+existing="$(listener_pids || true)"
+if [[ -n "$existing" ]]; then
+    for pid in $existing; do
+        exe="$(basename "$(readlink -f "/proc/$pid/exe" 2>/dev/null || echo unknown)" 2>/dev/null || true)"
+        if [[ "$exe" == "llama-server" ]]; then
+            echo "Port $PORT held by stale llama-server pid $pid - stopping it"
+            kill "$pid" 2>/dev/null || true
+        else
+            echo "Port $PORT held by pid $pid ($exe) - leaving it alone"
+        fi
+    done
+
+    # Give the stopped process time to release the port (the model takes ~25 s to load).
+    for ((i = 0; i < 30; i++)); do
+        port_used || break
+        sleep 1
+    done
+    if port_used; then
+        echo "warning: port $PORT is still in use" >&2
+        exit 1
+    fi
+fi
+
+# The server may not have bound the port yet - also check by name and port argument.
+for pid in $(pgrep -x llama-server 2>/dev/null || true); do
+    cmdline="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)"
+    if [[ "$cmdline" =~ --port[=[:space:]]+$PORT([[:space:]]|$) ]]; then
+        echo "Stopping leftover llama-server pid $pid"
+        kill "$pid" 2>/dev/null || true
+    else
+        echo "Keeping llama-server pid $pid - it serves another port"
+    fi
+done
+
+# --- SYCL environment ---
+mkdir -p "$SLOTS_DIR" "$SYCL_CACHE"
+
+# Level Zero only: skip the OpenCL adapter of the same GPU.
+export ONEAPI_DEVICE_SELECTOR="level_zero:gpu"
+export ZES_ENABLE_SYSMAN="1"
+# Keep compiled SYCL kernels between runs, otherwise the first tokens are slow.
+export SYCL_CACHE_PERSISTENT="1"
+export SYCL_CACHE_DIR="$SYCL_CACHE"
+
+# --- Start ---
+echo "Starting llama-server on $HOST_ADDR:$PORT"
+echo "  Model:                  $MODEL_PATH"
+echo "  Alias:                  qwen3.6-35b-a3b"
+echo "  Context:                $CONTEXT"
+echo "  Reasoning preserve:     disabled"
+echo "  SYCL_CACHE_PERSISTENT:  $SYCL_CACHE_PERSISTENT"
+
+exec "$SERVER_BIN" \
+    -m "$MODEL_PATH" \
+    -a qwen3.6-35b-a3b \
+    --host "$HOST_ADDR" --port "$PORT" \
+    -ngl 99 -c "$CONTEXT" \
+    -ctk q8_0 -ctv q8_0 -fa on \
+    -b 8192 -ub 4096 \
+    -t 8 --parallel 1 \
+    --jinja --no-warmup --no-reasoning-preserve \
+    --slot-save-path "$SLOTS_DIR" \
+    --metrics
