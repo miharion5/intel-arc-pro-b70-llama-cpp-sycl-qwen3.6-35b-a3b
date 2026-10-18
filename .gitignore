@@ -1,0 +1,6 @@
+# Local assets - download them yourself, see README.md
+Model/
+Llama/
+
+# Runtime caches and saved slots
+Cache/
