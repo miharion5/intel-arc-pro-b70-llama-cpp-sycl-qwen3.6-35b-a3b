@@ -4,3 +4,6 @@ Llama/
 
 # Runtime caches and saved slots
 Cache/
+
+# Local-only launchers that live in this folder but are not part of the public repository
+stop-llama-server.ps1
