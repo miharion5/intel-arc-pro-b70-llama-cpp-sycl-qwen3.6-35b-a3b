@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-# llama.cpp (SYCL) + Qwen3.6-35B-A3B launcher for Intel Arc Pro B70 (Linux).
-# Everything is resolved relative to this script:
-#   ./Llama/llama-server                            - llama.cpp SYCL build (see README)
-#   ./Model/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf          - the model (see README)
-#   ./Cache/...                                     - generated at runtime (gitignored)
 set -euo pipefail
 
 # --- Paths ---
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SERVER_BIN="$SCRIPT_DIR/Llama/llama-server"
-MODEL_PATH="$SCRIPT_DIR/Model/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
-SLOTS_DIR="$SCRIPT_DIR/Cache/llama-slots"
-SYCL_CACHE="$SCRIPT_DIR/Cache/sycl"
+SERVER_BIN="$SCRIPT_DIR/llama/llama-server"
+MODEL_PATH="$SCRIPT_DIR/model/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
+SLOTS_DIR="$SCRIPT_DIR/cache/llama-slots"
+SYCL_CACHE="$SCRIPT_DIR/cache/sycl"
 
 # --- Port and address ---
 HOST_ADDR="127.0.0.1"
@@ -20,11 +15,11 @@ CONTEXT=131072
 
 # --- Checks ---
 if [[ ! -x "$SERVER_BIN" ]]; then
-    echo "error: $SERVER_BIN is missing or not executable - unpack the Linux SYCL build into ./Llama (see README.md)" >&2
+    echo "error: $SERVER_BIN is missing or not executable - unpack the Linux SYCL build into ./llama (see README.md)" >&2
     exit 1
 fi
 if [[ ! -f "$MODEL_PATH" ]]; then
-    echo "error: model not found at $MODEL_PATH - download the GGUF into ./Model (see README.md)" >&2
+    echo "error: model not found at $MODEL_PATH - download the GGUF into ./model (see README.md)" >&2
     exit 1
 fi
 

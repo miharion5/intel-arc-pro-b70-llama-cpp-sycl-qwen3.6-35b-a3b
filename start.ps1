@@ -1,15 +1,11 @@
 # llama.cpp (SYCL) + Qwen3.6-35B-A3B launcher for Intel Arc Pro B70.
-# Everything is resolved relative to this script:
-#   .\Llama\llama-server.exe                        - llama.cpp SYCL build (see README)
-#   .\Model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf          - the model (see README)
-#   .\Cache\...                                     - generated at runtime (gitignored)
 
 # --- Paths ---
 $ScriptDir  = $PSScriptRoot
-$ServerExe  = Join-Path $ScriptDir "Llama\llama-server.exe"
-$ModelPath  = Join-Path $ScriptDir "Model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
-$SlotsDir   = Join-Path $ScriptDir "Cache\llama-slots"
-$SyclCache  = Join-Path $ScriptDir "Cache\sycl"
+$ServerExe  = Join-Path $ScriptDir "llama\llama-server.exe"
+$ModelPath  = Join-Path $ScriptDir "model\Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
+$SlotsDir   = Join-Path $ScriptDir "cache\llama-slots"
+$SyclCache  = Join-Path $ScriptDir "cache\sycl"
 
 # --- Port and address ---
 $HostAddr = "127.0.0.1"
@@ -18,10 +14,10 @@ $Context  = 131072
 
 # --- Checks ---
 if (-not (Test-Path $ServerExe)) {
-    Write-Error "llama-server.exe not found at $ServerExe - download the SYCL build and put it into .\Llama (see README.md)"; exit 1
+    Write-Error "llama-server.exe not found at $ServerExe - download the SYCL build and put it into .\llama (see README.md)"; exit 1
 }
 if (-not (Test-Path $ModelPath)) {
-    Write-Error "Model not found at $ModelPath - download the GGUF and put it into .\Model (see README.md)"; exit 1
+    Write-Error "Model not found at $ModelPath - download the GGUF and put it into .\model (see README.md)"; exit 1
 }
 
 # --- Port ---
